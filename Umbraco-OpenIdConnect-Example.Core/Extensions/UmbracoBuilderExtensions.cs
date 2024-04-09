@@ -2,6 +2,7 @@
 {
     using System.Net;
     using System.Security.Claims;
+    using Microsoft.AspNetCore.Authentication;
     using Microsoft.Extensions.DependencyInjection;
     using Provider;
     using Umbraco.Cms.Core.DependencyInjection;
@@ -27,7 +28,7 @@
                                 var config = builder.Config;
                                 options.ResponseType = "code";
                                 options.Scope.Clear(); //otherwise .NET adds profile scope, which we are not allowed to use.
-                                options.Scope.Add("openid mitid nemlogin privileges");
+                                options.Scope.Add("openid mitid ssn privileges");
                                 //options.Scope.Add("profile");
                                 //options.Scope.Add("email");
                                 //options.Scope.Add("phone");
@@ -41,6 +42,23 @@
                                 options.ClientSecret = config["OpenIdConnect:ClientSecret"];
                                 options.SaveTokens = true;
                                 options.TokenValidationParameters.SaveSigninToken = true;
+                                options.ClaimActions.MapAll();
+                             
+                                options.GetClaimsFromUserInfoEndpoint = true;
+
+                                //
+                                options.ClaimActions.MapJsonKey("loa", "loa", "string");
+                                options.ClaimActions.MapJsonKey("dk.cpr", "dk.cpr", "string");
+                                options.ClaimActions.MapJsonKey("idp_identity_id", "idp_identity_id", "string");
+                                options.ClaimActions.MapJsonKey("idp_identity_id", "idp_identity_id", "string");
+                                options.ClaimActions.MapJsonKey("idp", "idp", "string");
+                                options.ClaimActions.MapJsonKey(ClaimTypes.Name, "mitid.identity_name", "string");
+
+                                options.Events.OnUserInformationReceived = (user) =>
+                                {
+                                    var claims = user.Principal.Claims.ToList();
+                                    return Task.CompletedTask;
+                                };
                                 options.Events.OnTokenValidated = async context =>
                                 {
                                     var claims = context?.Principal?.Claims.ToList();
@@ -81,6 +99,7 @@
                                 };
                                 options.Events.OnRedirectToIdentityProviderForSignOut = async notification =>
                                 {
+                                    //https://broker.signaturgruppen.dk/application/files/8416/3610/7081/Nets_eID_Broker_Sessions_v.0.9.pdf
                                     var protocolMessage = notification.ProtocolMessage;
 
                                     var logoutUrl = config["OpenIdConnect:LogoutUrl"];
