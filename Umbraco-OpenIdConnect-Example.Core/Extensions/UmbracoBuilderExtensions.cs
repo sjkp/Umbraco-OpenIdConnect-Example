@@ -26,11 +26,12 @@
                             {
                                 var config = builder.Config;
                                 options.ResponseType = "code";
-                                options.Scope.Add("openid");
-                                options.Scope.Add("profile");
-                                options.Scope.Add("email");
-                                options.Scope.Add("phone");
-                                options.Scope.Add("address");
+                                options.Scope.Clear(); //otherwise .NET adds profile scope, which we are not allowed to use.
+                                options.Scope.Add("openid mitid nemlogin privileges");
+                                //options.Scope.Add("profile");
+                                //options.Scope.Add("email");
+                                //options.Scope.Add("phone");
+                                //options.Scope.Add("address");
                                 options.RequireHttpsMetadata = true;
                                 options.MetadataAddress = config["OpenIdConnect:MetadataAddress"];
                                 options.ClientId = config["OpenIdConnect:ClientId"];
